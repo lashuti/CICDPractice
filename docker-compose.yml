@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  sampledockercrudapp:
+    image: ${DOCKER_REGISTRY-}sampledockercrudapp
+    container_name: SampleDockerCRUD.API
+    build:
+      context: .
+      dockerfile: SampleDockerCRUDApp/Dockerfile
+    ports:
+        - "80:80"
+        - "443:443"
+    depends_on:
+        - SampleDockerCRUD.db
+
+  SampleDockerCRUD.db:
+    image: postgres:latest
+    container_name: SampleDockerCRUD.Database
+    environment:
+      - POSTGRES_DB=library
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./.containers/SampleDockerCRUD-db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
