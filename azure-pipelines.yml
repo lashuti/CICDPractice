@@ -50,6 +50,7 @@ jobs:
 
   - job: Trivy
     displayName: 'Tests'
+    dependsOn: Build
     steps:
     - script: |
         docker pull aquasec/trivy:latest
@@ -57,6 +58,7 @@ jobs:
       displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
 
   - job: Deploy
+    dependsOn: Build
     displayName: 'Deploy Docker Image to AWS'
     steps:
     - script: |
