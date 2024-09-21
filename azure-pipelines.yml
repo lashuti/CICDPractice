@@ -15,8 +15,8 @@ pool: local #Locally run agent
 
 variables:
   AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
-  AWS_SECRET_ACCESS_KEY: $(awsSecretAccessKey)
-  AWS_REGION: 'eu-central-1'
+  AWS_SECRET_ACCESS_KEY: $(awsSecretKey)
+  AWS_REGION: $(awsRegion)
   AWS_ECR_URI: $(awsEcrUri)
 
 steps:
