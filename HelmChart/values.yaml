@@ -1,0 +1,26 @@
+namespace: 
+  name: namespace
+  labels:
+    environment: development
+
+deployment:
+  name: ecrDockerImageDeployment
+  podName: ecrImage
+  containerName: container
+  image: 590183895887.dkr.ecr.us-east-1.amazonaws.com/cicdpractice
+  imageVersion: latest
+  containerPort: 80
+
+service:
+  name: service
+  protocol: TCP
+  type: ClusterIP
+  port: 80
+
+virtualService:
+  name: vs
+  host: hostexample.com
+  ingressGateway: hostgateway
+  timeout: 5s
+  attempts: 3
+  perTryTimeout: 1s
