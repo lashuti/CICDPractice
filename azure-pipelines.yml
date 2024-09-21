@@ -81,9 +81,12 @@ jobs:
     - task : DownloadSecureFile@1
       inputs:
         secureFile: 'lg-kp-1.pem'
+      displayName: 'Get Secure pem file'
 
     - script: |
+        echo 'before chmod'
         chmod 400 $(Agent.TempDirectory)/lg-kp-1.pem
+        echo 'after chmod before ssh'
         ssh -o StrictHostKeyChecking=no -i $(Agent.TempDirectory)/lg-kp-1.pem ec2-user@34.229.192.186 "
         $(aws ecr get-login --no-include-email --region $(AWS_DEFAULT_REGION)) && \
         docker pull $(ECR_REPO_URL):$(Build.BuildNumber) && \
