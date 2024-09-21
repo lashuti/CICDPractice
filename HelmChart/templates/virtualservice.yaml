@@ -1,0 +1,24 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ .Values.virtualService.name }}
+  namespace: {{ .Values.namespace.name }}
+spec:
+  hosts:
+    - {{ .Values.virtualService.host }}.svc.cluster.local
+  gateways:
+    - {{ .Values.virtualService.ingressGateway }}
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: {{ .Values.service.name }}
+            port:
+              number: {{ .Values.service.port }}
+      timeout: {{ .Values.virtualService.timeout }}
+      retries:
+        attempts: {{ .Values.virtualService.attempts }}
+        perTryTimeout: {{ .Values.virtualService.perTryTimeout }}
+        retryOn: gateway-error,connect-failure,refused-stream
