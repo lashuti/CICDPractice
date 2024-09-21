@@ -42,5 +42,5 @@ steps:
 - script: |
     docker pull aquasec/trivy:latest
 
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet trivy image sampledockercrudapp:$(Build.BuildNumber)
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet image sampledockercrudapp:$(Build.BuildNumber)
   displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
