@@ -41,8 +41,6 @@ steps:
     arguments: '--configuration Release'
   displayName: 'Build Project'
 
-- task: Docker@2
-  inputs:
-    command: 'build'
-    Dockerfile: '**/Dockerfile'
-  displayName: 'Build DockerFile'
+- script: |
+    docker build -f SampleDockerCRUDApp/Dockerfile -t SampleDockerCRUDApp:$(Build.BuildId) .
+  displayName: 'Build Docker Image'
