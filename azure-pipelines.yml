@@ -5,22 +5,16 @@ trigger:
 
 pool: local #Locally run agent
 
-# variables:
-#   customTag: '' #Init
-
-steps:
-# - script: |
-#     customTag="$(Build.BuildId)";
-#     echo "##vso[build.updatebuildnumber]$customTag"
-#     echo "##vso[task.setvariable variable=customTag]$customTag"
-#   displayName: 'Set Custom Build Tag'
-
-#Build dotnet
-#Build Dockerimage
-#Scan with Trivy
-#Upload to ECR
+#Install Dotnet SDK to Agent
+#Restore Dotnet nuget packages
+#Build Dotnet solution
+#Build Docker Image
+#Install Trivy
+#Scan Docker Image with Trivy
+#Upload Docker Image to Amazon ECR
 #Make that Dockerimage run on EC2 instance
 
+steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
@@ -39,8 +33,20 @@ steps:
     command: 'build'
     projects: '*.sln'
     arguments: '--configuration Release'
-  displayName: 'Build Project'
+  displayName: 'Build Solution'
 
 - script: |
     docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build.BuildNumber) .
   displayName: 'Build Docker Image'
+
+
+- powershell: |
+    Invoke-WebRequest -UseBasicP | `
+      -Uri "https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.36.0_windows_amd64.zip" -OutFile "trivy.zip"
+    Expand-Archive -Path "trivy.zip" -DestinationPath "C:\Program Files\Trivy" -Force
+    $env:Path += ";C:\Program Files\Trivy"
+  displayName: 'Install Trivy'
+
+- script: |
+    trivy image --exit-code 1 --severity HIGH,CRITICAL sampledockercrudapp:$(Build.BuildNumber)
+  displayName: 'Scan Docker Image with Trivy'
