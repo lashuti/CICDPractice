@@ -16,8 +16,8 @@ pool: local #Locally run agent
 variables:
   AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
   AWS_SECRET_ACCESS_KEY: $(awsSecretKey)
-  AWS_REGION: $(awsRegion)
-  AWS_ECR_URI: $(awsEcrUri)
+  AWS_DEFAULT_REGION: $(awsRegion)
+  ECR_REPO_URL: $(awsEcrUri)
 
 steps:
 - task: UseDotNet@2
@@ -53,17 +53,17 @@ steps:
 - script: |
     aws configure set aws_access_key_id $(AWS_ACCESS_KEY_ID)
     aws configure set aws_secret_access_key $(AWS_SECRET_ACCESS_KEY)
-    aws configure set region $(AWS_REGION)
+    aws configure set region $(AWS_DEFAULT_REGION)
   displayName: 'Configure AWS Credentials'
 
 - script: |
-    aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ECR_URI)
+    aws ecr get-login-password --region $(AWS_DEFAULT_REGION) | docker login --username AWS --password-stdin $(ECR_REPO_URL)
   displayName: 'Login to Amazon ECR'
 
 - script: |
-    docker tag sampledockercrudapp:$(Build.BuildNumber):latest $(AWS_ECR_URI):latest
+    docker tag sampledockercrudapp:$(Build.BuildNumber):latest $(ECR_REPO_URL):latest
   displayName: 'Tag Docker Image'
 
 - script: |
-    docker push $(AWS_ECR_URI):latest
+    docker push $(ECR_REPO_URL):latest
   displayName: 'Push Docker Image to ECR'
