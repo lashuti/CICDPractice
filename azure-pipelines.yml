@@ -5,15 +5,15 @@ trigger:
 
 pool: local #Locally run agent
 
-variables:
-  customTag: '' #Init
+# variables:
+#   customTag: '' #Init
 
 steps:
-- script: |
-    customTag="$(Build.BuildId)";
-    echo "##vso[build.updatebuildnumber]$customTag"
-    echo "##vso[task.setvariable variable=customTag]$customTag"
-  displayName: 'Set Custom Build Tag'
+# - script: |
+#     customTag="$(Build.BuildId)";
+#     echo "##vso[build.updatebuildnumber]$customTag"
+#     echo "##vso[task.setvariable variable=customTag]$customTag"
+#   displayName: 'Set Custom Build Tag'
 
 #Build dotnet
 #Build Dockerimage
