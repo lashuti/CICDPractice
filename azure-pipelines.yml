@@ -39,17 +39,8 @@ steps:
     docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build.BuildNumber) .
   displayName: 'Build Docker Image'
 
-- powershell: |
-    echo "Downloading Trivy..."
-    Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.36.0_windows_amd64.zip" -OutFile "trivy.zip"
-    echo "Extracting Trivy..."
-    Expand-Archive -Path "trivy.zip" -DestinationPath "C:\Program Files\Trivy" -Force
-    echo "Adding Trivy to PATH..."
-    [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\Program Files\Trivy', [System.EnvironmentVariableTarget]::Machine)
-    echo "Verifying installation..."
-    & "C:\Program Files\Trivy\trivy.exe" --version
-  displayName: 'Install Trivy'
-
 - script: |
-    trivy image --exit-code 1 --severity HIGH,CRITICAL sampledockercrudapp:$(Build.BuildNumber)
-  displayName: 'Scan Docker Image with Trivy'
+    docker pull aquasec/trivy:latest
+
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet sampledockercrudapp:$(Build.BuildNumber)
+  displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
