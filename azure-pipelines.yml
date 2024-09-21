@@ -49,11 +49,15 @@ steps:
     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet image sampledockercrudapp:$(Build.BuildNumber)
   displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
 
+#Since for some reason I cant connect to AWS via Service connections, ILL DO IT WITH SCRIPT :D
+- script: |
+    aws configure set aws_access_key_id $(AWS_ACCESS_KEY_ID)
+    aws configure set aws_secret_access_key $(AWS_SECRET_ACCESS_KEY)
+    aws configure set region $(AWS_REGION)
+  displayName: 'Configure AWS Credentials'
+
 - script: |
     aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ECR_URI)
-  env:
-    AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
-    AWS_SECRET_ACCESS_KEY: $(awsSecretKey)
   displayName: 'Login to Amazon ECR'
 
 - script: |
