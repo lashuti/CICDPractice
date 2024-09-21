@@ -10,7 +10,7 @@ variables:
 
 steps:
 - script: |
-    customTag="$(Build.SourceBranchName)-$(Build.BuildId)";
+    customTag="$(Build.BuildId)";
     echo "##vso[build.updatebuildnumber]$customTag"
     echo "##vso[task.setvariable variable=customTag]$customTag"
   displayName: 'Set Custom Build Tag'
