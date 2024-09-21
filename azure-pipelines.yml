@@ -10,8 +10,9 @@ pool: local #Locally run agent
 #Build Dotnet solution
 #Build Docker Image
 #Pull Trivy from Dockerhub and Scan built Docker Image with it
-#Upload Docker Image to Amazon ECR
-#Make that Dockerimage run on EC2 instance
+#Authenticate to Amazon ECR
+#Tag Docker Image
+#Upload Tagged Docker Image to Amazon ECR
 
 variables:
   AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
@@ -19,51 +20,53 @@ variables:
   AWS_DEFAULT_REGION: $(awsRegion)
   ECR_REPO_URL: $(awsEcrUri)
 
-steps:
-- task: UseDotNet@2
-  inputs:
-    packageType: 'sdk'
-    version: '6.0.x'
-    installationPath: $(Agent.ToolsDirectory)/dotnet
-  displayName: 'Install .NET SDK'
+jobs:
+  - job: Build
+    displayName: 'Restore & Build'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '6.0.x'
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+      displayName: 'Install .NET SDK'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'restore'
-    projects: '*.sln'
-  displayName: 'Restore Packages'
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
+        projects: '*.sln'
+      displayName: 'Restore Packages'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    projects: '*.sln'
-    arguments: '--configuration Release'
-  displayName: 'Build Solution'
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+        projects: '*.sln'
+        arguments: '--configuration Release'
+      displayName: 'Build Solution'
 
-- script: |
-    docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build.BuildNumber) .
-  displayName: 'Build Docker Image'
+    - script: |
+        docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build.BuildNumber) .
+      displayName: 'Build Docker Image'
 
-- script: |
-    docker pull aquasec/trivy:latest
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet image sampledockercrudapp:$(Build.BuildNumber)
-  displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
+  - job: Trivy
+    displayName: 'Tests'
+    steps:
+    - script: |
+        docker pull aquasec/trivy:latest
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet image sampledockercrudapp:$(Build.BuildNumber)
+      displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
 
-# #Since for some reason I cant authenticate to AWS via Service connections, ILL DO IT WITH SCRIPT :D
-# - script: |
-#     aws configure set aws_access_key_id $(AWS_ACCESS_KEY_ID)
-#     aws configure set aws_secret_access_key $(AWS_SECRET_ACCESS_KEY)
-#     aws configure set region $(AWS_DEFAULT_REGION)
-#   displayName: 'Configure AWS Credentials'
+  - job: Deploy
+    displayName: 'Deploy Docker Image to AWS'
+    steps:
+    - script: |
+        aws ecr get-login-password --region $(AWS_DEFAULT_REGION) | docker login --username AWS --password-stdin $(ECR_REPO_URL)
+      displayName: 'Login to Amazon ECR'
 
-- script: |
-    aws ecr get-login-password --region $(AWS_DEFAULT_REGION) | docker login --username AWS --password-stdin $(ECR_REPO_URL)
-  displayName: 'Login to Amazon ECR'
+    - script: |
+        docker tag sampledockercrudapp:$(Build.BuildNumber) $(ECR_REPO_URL):latest
+      displayName: 'Tag Docker Image'
 
-- script: |
-    docker tag sampledockercrudapp:$(Build.BuildNumber) $(ECR_REPO_URL):latest
-  displayName: 'Tag Docker Image'
-
-- script: |
-    docker push $(ECR_REPO_URL):latest
-  displayName: 'Push Docker Image to ECR'
+    - script: |
+        docker push $(ECR_REPO_URL):latest
+      displayName: 'Push Docker Image to ECR'
