@@ -57,7 +57,7 @@ jobs:
         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest --quiet image sampledockercrudapp:$(Build.BuildNumber)
       displayName: 'Pull Trivy from Docker and Scan the Dockerfile'
 
-  - job: Deploy
+  - job: DeployToECR
     dependsOn: Build
     displayName: 'Deploy Docker Image to AWS'
     steps:
@@ -70,5 +70,24 @@ jobs:
       displayName: 'Tag Docker Image'
 
     - script: |
-        docker push $(ECR_REPO_URL):latest
+        docker push $(ECR_REPO_URL):$(Build.BuildNumber)
       displayName: 'Push Docker Image to ECR'
+
+  - job: RunImageOnEC2
+    dependsOn: DeployToECR
+    displayName: 'Run Docker Image from ECR to EC2'
+    steps:
+
+    - task : DownloadSecureFile@1
+      inputs:
+        secureFile: 'lg-kp-1.pem'
+
+    - script: |
+        chmod 600 $(Agent.TempDirectory)/lg-kp-1.pem
+        ssh -o StrictHostKeyChecking=no -i $(Agent.TempDirectory)/lg-kp-1.pem ec2-user@34.229.192.186 "
+        $(aws ecr get-login --no-include-email --region $(AWS_DEFAULT_REGION)) && \
+        docker pull $(ECR_REPO_URL):$(Build.BuildNumber) && \
+        docker run $(ECR_REPO_URL):$(Build.BuildNumber)
+        "
+      displayName: 'SSH into EC2 instance and Pull&Run Docker Image from ECR'
+          
