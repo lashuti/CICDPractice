@@ -1,18 +1,44 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- master
+  branches:
+    include:
+     - '*'
 
-pool: local
+pool: local #Locally run agent
+
+variables:
+    customTag: '' #Init
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    customTag="$(Build.SourceBranchName)-$(Build.BuildId)";
+    echo "##vso[build.updatebuildnumber]$customTag"
+    echo "##vso[task.setvariable variable=customTag]$customTag"
+  displayName: 'Set Custom Build Tag'
+
+#Build dotnet
+#Build Dockerimage
+#Scan with Trivy
+#Upload to ECR
+#Make that Dockerimage run on EC2 instance
+
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '6.x.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+  displayName: 'Install .NET SDK'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+  displayName: 'Restore Packages'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    arguments: '--configuration Release'
+  displayName: 'Build Project'
