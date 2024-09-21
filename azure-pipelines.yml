@@ -39,12 +39,15 @@ steps:
     docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build.BuildNumber) .
   displayName: 'Build Docker Image'
 
-
 - powershell: |
-    Invoke-WebRequest -UseBasicP | `
-      -Uri "https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.36.0_windows_amd64.zip" -OutFile "trivy.zip"
+    echo "Downloading Trivy..."
+    Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.36.0_windows_amd64.zip" -OutFile "trivy.zip"
+    echo "Extracting Trivy..."
     Expand-Archive -Path "trivy.zip" -DestinationPath "C:\Program Files\Trivy" -Force
-    $env:Path += ";C:\Program Files\Trivy"
+    echo "Adding Trivy to PATH..."
+    [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\Program Files\Trivy', [System.EnvironmentVariableTarget]::Machine)
+    echo "Verifying installation..."
+    & "C:\Program Files\Trivy\trivy.exe" --version
   displayName: 'Install Trivy'
 
 - script: |
