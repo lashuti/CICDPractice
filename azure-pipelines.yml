@@ -42,5 +42,5 @@ steps:
   displayName: 'Build Project'
 
 - script: |
-    docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build)-$(Build.BuildId) .
+    docker build -f SampleDockerCRUDApp/Dockerfile -t sampledockercrudapp:$(Build.BuildNumber) .
   displayName: 'Build Docker Image'
