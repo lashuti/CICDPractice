@@ -6,7 +6,7 @@ trigger:
 pool: local #Locally run agent
 
 variables:
-    customTag: '' #Init
+  customTag: '' #Init
 
 steps:
 - script: |
